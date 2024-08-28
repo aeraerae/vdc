@@ -1,1 +1,0 @@
-/Users/gyuminkim/Desktop/dev/rust/vdc/target/debug/vdc: /Users/gyuminkim/Desktop/dev/rust/vdc/src/main.rs /Users/gyuminkim/Desktop/dev/rust/vdc/src/utils/level.rs /Users/gyuminkim/Desktop/dev/rust/vdc/src/utils/mod.rs
