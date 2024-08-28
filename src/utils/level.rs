@@ -28,7 +28,11 @@ pub fn read_gmd() -> String {
         buf.clear();
     }
 
-    txt[9].clone()
+    let mut idx = 0;
+    for i in 0..txt.len() {
+        if txt[i] == "k4" { idx = i + 1; }
+    }
+    txt[idx].clone()
 }
 
 pub fn decode_level() -> String {
