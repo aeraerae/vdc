@@ -4,7 +4,10 @@ mod utils;
 
 fn main() {
     let level_string = utils::level::decode_level();
-    let _level = utils::level::parse_level(level_string);
+    let level = utils::level::parse_level(level_string);
+    let test = utils::level::stringify_level(level);
+    let finished = utils::level::encode_level(test);
+    println!("{}", finished);
     println!("done");
 }
 

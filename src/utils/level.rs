@@ -1,16 +1,14 @@
 use crate::Level;
 
 extern crate quick_xml;
-
-use quick_xml::events::Event;
-use quick_xml::reader::Reader;
-
 extern crate flate2;
 
-use std::{collections::HashMap, io::prelude::*};
-use flate2::read::GzDecoder;
+use std::{collections::HashMap, io::{prelude::*, Cursor}};
+use quick_xml::{events::Event, reader::Reader};
 use base64::{engine::general_purpose::URL_SAFE, Engine as _};
-use std::io::Cursor;
+use flate2::read::GzDecoder;
+use flate2::write::GzEncoder;
+use flate2::Compression;
 
 pub fn read_gmd() -> String {
     let mut reader = Reader::from_file("./Unnamed 4.gmd").expect("No file!");
@@ -32,6 +30,7 @@ pub fn read_gmd() -> String {
     for i in 0..txt.len() {
         if txt[i] == "k4" { idx = i + 1; }
     }
+
     txt[idx].clone()
 }
 
@@ -45,8 +44,8 @@ pub fn decode_level() -> String {
     decompressed_string
 }
 
-pub fn parse_level(level: String) -> Level {
-    let a = level.split(';').collect::<Vec<&str>>();
+pub fn parse_level(level_string: String) -> Level {
+    let a = level_string.split(';').collect::<Vec<&str>>();
     let mut objects = Vec::with_capacity(a.len() - 2);
     for i in 1..(a.len() - 1) {
         let obj = a[i].split(',').collect::<Vec<&str>>();
@@ -80,4 +79,55 @@ pub fn parse_level(level: String) -> Level {
     }
 
     Level { data, colors, objects }
+}
+
+pub fn stringify_level(level: Level) -> String {
+    let mut level_string = String::from("KS38,");
+
+    for i in level.colors.iter() {
+        let k = i.keys().collect::<Vec<&String>>();
+        let v = i.values().collect::<Vec<&String>>();
+
+        let mut is_first = true;
+        for j in 0..k.len() {
+            if !is_first { level_string.push('_'); } else { is_first = false; }
+            level_string.push_str(k[j]);
+            level_string.push('_');
+            level_string.push_str(v[j]);
+        }
+        level_string.push('|');
+    }
+
+    for i in level.data.iter() {
+        level_string.push(',');
+        level_string.push_str(i.0);
+        level_string.push(',');
+        level_string.push_str(i.1);
+    }
+    level_string.push(';');
+
+    for i in level.objects.iter() {
+        let k = i.keys().collect::<Vec<&String>>();
+        let v = i.values().collect::<Vec<&String>>();
+
+        let mut is_first = true;
+        for j in 0..k.len() {
+            if !is_first { level_string.push(','); } else { is_first = false; }
+            level_string.push_str(k[j]);
+            level_string.push(',');
+            level_string.push_str(v[j]);
+        }
+        level_string.push(';');
+    }
+
+    level_string
+}
+
+pub fn encode_level(level_string: String) -> String {
+    let mut encoder = GzEncoder::new(Vec::new(), Compression::default());
+    encoder.write_all(level_string.as_bytes()).expect("Failed to write data");
+    let compressed = encoder.finish().expect("Failed to compress data");
+    let encoded_bytes = URL_SAFE.encode(compressed);
+
+    encoded_bytes
 }
